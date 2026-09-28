@@ -28,3 +28,5 @@ Copy the `ControllerRebound` folder into `Interface/AddOns`, then reload the UI.
 ## Tester notes
 
 Test each configured face button bare, with LT, RT, LT+RT, LB, RB, and LB+RB both outside and inside combat. Check that gear icons are clickable but remain below bags and other dialogs. Check cooldown sweeps for spells and simple cast macros. Report the game build, controller type, class, and exact failing combination.
+
+<img width="422" height="623" alt="image" src="https://github.com/user-attachments/assets/f8e9ecc2-2729-4eb6-b805-2c423d367cd0" />
