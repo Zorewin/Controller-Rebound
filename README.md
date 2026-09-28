@@ -1,3 +1,5 @@
+<img width="594" height="611" alt="image" src="https://github.com/user-attachments/assets/8b12c95d-232e-4f79-98a1-64ebfaa83664" />
+
 # Controller Rebound for WoW Forever
 
 Controller Rebound adds a conditional spell or macro to each controller face button (A, B, X, Y) without replacing Forever's native controller layers.
