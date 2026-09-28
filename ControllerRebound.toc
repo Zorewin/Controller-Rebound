@@ -1,0 +1,12 @@
+## Interface: 120105
+## Title: Controller Rebound
+## Notes: Conditional face-button spells with native controller layers for WoW Forever.
+## Author: Controller Rebound
+## Version: 1.4.0-beta
+## IconTexture: Interface\AddOns\ControllerRebound\Media\ControllerReboundIcon.tga
+## SavedVariables: ControllerReboundDB, ControllerReboundSlotsDB
+## SavedVariablesPerCharacter: ControllerReboundCharacterDB
+ControllerRebound_Tests.lua
+ControllerRebound_Conditional.lua
+ControllerRebound_RuleBar.lua
+ControllerRebound_Command.lua
