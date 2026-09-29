@@ -1,0 +1,36 @@
+name: Publish Controller Rebound 1.4.1-beta
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/publish-1.4.1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build addon archive
+        run: |
+          mkdir -p package/ControllerRebound
+          cp ControllerRebound.toc ControllerRebound_*.lua README.md package/ControllerRebound/
+          cp -R Media package/ControllerRebound/
+          cd package
+          zip -r ../ControllerRebound-1.4.1-beta-2026-09-29.zip ControllerRebound
+
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create 1.4.1-beta \
+            --target "${{ github.sha }}" \
+            --title "Controller Rebound 1.4.1-beta" \
+            --prerelease \
+            --notes "Fixed native modifier layers during Stealth, forms, stances, and possession. Validated in-game: 27 passed, 0 failed." \
+            ControllerRebound-1.4.1-beta-2026-09-29.zip
