@@ -121,6 +121,63 @@ function ruleBar.nativeLayerCandidates(layer)
     return copy
 end
 
+local nativeStateActionBarNames = {
+    "possessBar", "PossessBar",
+    "stanceBar", "StanceBar",
+}
+
+local function isNativeStateActionBar(name)
+    for _, stateName in ipairs(nativeStateActionBarNames) do
+        if name == stateName then
+            return true
+        end
+    end
+    return false
+end
+
+local function nativeStateActionBarPriority(name)
+    if name == "possessBar" or name == "PossessBar" then
+        return 1
+    end
+    if name == "stanceBar" or name == "StanceBar" then
+        return 2
+    end
+    return 3
+end
+
+-- A state action bar is the native action layer Forever displays for forms,
+-- stances, Stealth, and possession.  It replaces every face-button layer,
+-- whereas the normal controller bars remain the fallback when no state bar is
+-- visible.  The optional callback keeps this decision independently testable.
+function ruleBar.selectNativeActionBar(layer, actionBars, isShown)
+    if type(actionBars) ~= "table" then
+        return nil
+    end
+    if type(isShown) ~= "function" then
+        isShown = function(bar)
+            return bar and type(bar.IsShown) == "function" and bar:IsShown()
+        end
+    end
+
+    for _, name in ipairs(nativeStateActionBarNames) do
+        local bar = actionBars[name]
+        if bar and isShown(bar) then
+            return name
+        end
+    end
+
+    local names = ruleBar.nativeLayerCandidates(layer)
+    if not names then
+        return nil
+    end
+    for _, name in ipairs(names) do
+        if actionBars[name] then
+            return name
+        end
+    end
+    return nil
+end
+
 function ruleBar.getOverrideFaces(slots)
     slots = type(slots) == "table" and slots or conditional.getSlots()
     local selected = {}
@@ -569,7 +626,50 @@ local function nativeLayerFallbackButton(face, layer)
     return nil
 end
 
-local function fallbackMacro(fallback)
+local fallbackMacro
+
+local function configureNativeActionBarReferences(face, button)
+    local route = routes[face]
+    local main = _G.GamepadMainActionBarFrame
+    local pageUnit = main and main.PageUnit
+    local bars = pageUnit and pageUnit.actionBars
+    if not route or not bars or type(button.SetFrameRef) ~= "function" then
+        return false
+    end
+
+    local entries = {}
+    for name, bar in pairs(bars) do
+        local nativeButton = buttonFromActionBar(bar, route.fallbackIndex)
+        local macro = fallbackMacro(nativeButton)
+        if type(name) == "string" and macro then
+            entries[#entries + 1] = {
+                bar = bar,
+                macro = macro,
+                name = name,
+                statePriority = nativeStateActionBarPriority(name),
+            }
+        end
+    end
+    table.sort(entries, function(left, right)
+        if left.statePriority ~= right.statePriority then
+            return left.statePriority < right.statePriority
+        end
+        return left.name < right.name
+    end)
+    if #entries == 0 then
+        return false
+    end
+
+    for index, entry in ipairs(entries) do
+        button:SetFrameRef("controllerrebound-native-bar-" .. index, entry.bar)
+        button:SetAttribute("controllerrebound-native-bar-macro-" .. index, entry.macro)
+        button:SetAttribute("controllerrebound-native-bar-state-" .. index, isNativeStateActionBar(entry.name) and true or false)
+    end
+    button:SetAttribute("controllerrebound-native-bar-count", #entries)
+    return true
+end
+
+fallbackMacro = function(fallback)
     local name = fallback and fallback:GetName()
     if type(name) ~= "string" or name == "" then
         return nil
@@ -611,6 +711,9 @@ local function configureFaceModifierRouter(face, button)
             return false
         end
         macros[layer] = macro
+    end
+    if not configureNativeActionBarReferences(face, button) then
+        return false
     end
     local leftTriggerIndex = gamepadStateIndex("PADLTRIGGER")
     local rightTriggerIndex = gamepadStateIndex("PADRTRIGGER")
@@ -656,6 +759,17 @@ local function configureFaceModifierRouter(face, button)
             elseif rightTriggerHeld then
                 layer = "rt"
             end
+            local nativeMacro = self:GetAttribute("controllerrebound-router-macro-" .. layer)
+            local nativeBarCount = self:GetAttribute("controllerrebound-native-bar-count") or 0
+            for index = 1, nativeBarCount do
+                if self:GetAttribute("controllerrebound-native-bar-state-" .. index) then
+                    local nativeBar = self:GetFrameRef("controllerrebound-native-bar-" .. index)
+                    if nativeBar and nativeBar:IsShown() then
+                        nativeMacro = self:GetAttribute("controllerrebound-native-bar-macro-" .. index)
+                        break
+                    end
+                end
+            end
             if layer == "bare" then
                 if self:GetAttribute("controllerrebound-bare-state") == "override" then
                     local overrideType = self:GetAttribute("controllerrebound-override-type")
@@ -667,11 +781,11 @@ local function configureFaceModifierRouter(face, button)
                         self:SetAttribute("type1", "macro")
                     end
                 else
-                    self:SetAttribute("macrotext1", self:GetAttribute("controllerrebound-router-macro-bare"))
+                    self:SetAttribute("macrotext1", nativeMacro)
                     self:SetAttribute("type1", "macro")
                 end
             else
-                self:SetAttribute("macrotext1", self:GetAttribute("controllerrebound-router-macro-" .. layer))
+                self:SetAttribute("macrotext1", nativeMacro)
                 self:SetAttribute("type1", "macro")
             end
         end
@@ -1263,3 +1377,4 @@ if lifecycle then
         ruleBar.initialize()
     end)
 end
+
