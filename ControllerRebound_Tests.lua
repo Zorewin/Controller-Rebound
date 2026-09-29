@@ -98,6 +98,39 @@ tests.add("plans native targeting and shortcut bars for shoulder contexts", func
     tests.assertEqual(ruleBar.nativeLayerCandidates("lbrb")[1], "shortcutsBar", "LB+RB bar")
 end)
 
+tests.add("routes every modified face through a shown native state bar", function()
+    local ruleBar = ControllerRebound.RuleBar
+    if type(ruleBar) ~= "table" or type(ruleBar.selectNativeActionBar) ~= "function" then
+        error("ControllerRebound.RuleBar.selectNativeActionBar is unavailable")
+    end
+
+    local bars = {
+        leftBar = { shown = true },
+        rightBar = { shown = true },
+        bottomBar = { shown = true },
+        friendlyTargetingBar = { shown = false },
+        hostileTargetingBar = { shown = false },
+        shortcutsBar = { shown = false },
+        stanceBar = { shown = true },
+        possessBar = { shown = false },
+    }
+    local function isShown(bar)
+        return bar.shown
+    end
+
+    for _, layer in ipairs({ "lt", "rt", "ltrt", "lb", "rb", "lbrb" }) do
+        tests.assertEqual(ruleBar.selectNativeActionBar(layer, bars, isShown), "stanceBar", layer .. " uses shown stance bar")
+    end
+
+    bars.possessBar.shown = true
+    tests.assertEqual(ruleBar.selectNativeActionBar("rt", bars, isShown), "possessBar", "possess bar wins over stance bar")
+
+    bars.possessBar.shown = false
+    bars.stanceBar.shown = false
+    tests.assertEqual(ruleBar.selectNativeActionBar("lt", bars, isShown), "leftBar", "normal LT bar")
+    tests.assertEqual(ruleBar.selectNativeActionBar("rt", bars, isShown), "rightBar", "normal RT bar")
+end)
+
 tests.add("binds only spell slots with a real selected condition", function()
     local ruleBar = ControllerRebound.RuleBar
     if type(ruleBar) ~= "table" or type(ruleBar.getOverrideFaces) ~= "function" then
@@ -403,3 +436,4 @@ tests.add("waits for login before initializing controller buttons", function()
     tests.assertEqual(ruleBar.shouldInitializeForEvent("PLAYER_LOGIN", true), true, "login initializes")
     tests.assertEqual(ruleBar.shouldInitializeForEvent("PLAYER_ENTERING_WORLD", false), false, "world event waits for login")
 end)
+
