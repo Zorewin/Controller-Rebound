@@ -20,6 +20,10 @@ Copy the `ControllerRebound` folder into `Interface/AddOns`, then reload the UI.
 - Spell cooldowns, resource availability, and clear red out-of-range feedback on supported direct spells.
 - A custom Controller Rebound AddOn-list icon.
 
+## Version 1.4.1-beta
+
+- Native modifier layers now follow Forever's active Stealth, form, stance, and possession action bars instead of a stale normal bar.
+
 ## Commands
 
 - `/controllerrebound help` shows this quick usage reminder.
