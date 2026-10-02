@@ -24,6 +24,10 @@ Copy the `ControllerRebound` folder into `Interface/AddOns`, then reload the UI.
 
 - Native modifier layers now follow Forever's active Stealth, form, stance, and possession action bars instead of a stale normal bar.
 
+## Version 1.4.2-beta
+
+- Updated the add-on interface declaration for WoW Forever 1.60.1 (build 70124).
+
 ## Commands
 
 - `/controllerrebound help` shows this quick usage reminder.
