@@ -1,0 +1,37 @@
+name: Publish Controller Rebound 1.4.2-beta
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-1.4.2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build add-on archive
+        run: |
+          mkdir -p dist/ControllerRebound/Media
+          cp ControllerRebound.toc ControllerRebound_Command.lua ControllerRebound_Conditional.lua ControllerRebound_RuleBar.lua ControllerRebound_Tests.lua README.md dist/ControllerRebound/
+          cp Media/ControllerReboundIcon.tga dist/ControllerRebound/Media/
+          cd dist
+          zip -r ../ControllerRebound-1.4.2-beta-2026-10-02.zip ControllerRebound
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: 1.4.2-beta
+          name: Controller Rebound 1.4.2-beta
+          prerelease: true
+          body: |
+            Compatibility update for WoW Forever 1.60.1 (build 70124).
+            
+            No gameplay or binding behavior changed in this release.
+          files: ControllerRebound-1.4.2-beta-2026-10-02.zip
+          fail_on_unmatched_files: true
